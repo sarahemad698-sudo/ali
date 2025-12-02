@@ -1,0 +1,7 @@
+{
+  "name": "trak",
+  "description": "Smart city traffic monitoring dashboard with real-time map visualization and ESP32 sensor integration.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

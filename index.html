@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Smart Traffic Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS for the map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+    <!-- Scripts moved to head to ensure availability -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <!-- Leaflet Routing Machine JS -->
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <style>
+      /* Custom font for Arabic support if needed, defaulting to system fonts */
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      }
+      /* Leaflet container fix */
+      .leaflet-container {
+        width: 100%;
+        height: 100%;
+        border-radius: 0.75rem;
+        z-index: 10;
+      }
+      /* Hide the default routing instruction container to build our own UI */
+      .leaflet-routing-container {
+        display: none !important; 
+      }
+
+      /* Custom Traffic Labels on Map */
+      .traffic-label {
+        background: white;
+        border: 2px solid;
+        border-radius: 8px;
+        padding: 4px 8px;
+        text-align: center;
+        white-space: nowrap;
+        font-weight: bold;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 100px;
+      }
+      .traffic-label.high {
+        border-color: #ef4444; /* Red */
+        color: #991b1b;
+      }
+      .traffic-label.medium {
+        border-color: #eab308; /* Yellow */
+        color: #854d0e;
+      }
+      .traffic-label.low {
+        border-color: #22c55e; /* Green */
+        color: #166534;
+      }
+      /* Emergency Blue Style */
+      .traffic-label.emergency {
+        border-color: #2563eb; /* Blue */
+        color: #1e40af;
+        background-color: #eff6ff;
+        animation: pulse-blue 1.5s infinite;
+      }
+
+      .traffic-label .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-bottom: 2px;
+      }
+      .traffic-label.high .status-dot { background-color: #ef4444; }
+      .traffic-label.medium .status-dot { background-color: #eab308; }
+      .traffic-label.low .status-dot { background-color: #22c55e; }
+      .traffic-label.emergency .status-dot { background-color: #2563eb; }
+
+      @keyframes pulse-blue {
+        0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+      }
+
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "leaflet/": "https://aistudiocdn.com/leaflet@^1.9.4/",
+    "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
+    "react-leaflet": "https://aistudiocdn.com/react-leaflet@^5.0.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^11.0.8",
+    "src/": "https://aistudiocdn.com/src@^1.1.2/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-50">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
