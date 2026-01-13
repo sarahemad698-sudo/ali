@@ -27,7 +27,7 @@ const initialRoads: RoadData[] = [
       [30.0500, 31.1300],
       [30.0550, 31.1800],
     ],
-    avgGreenTime: 10,
+    avgGreenTime: 190,
   },
   {
     id: 2,
@@ -43,7 +43,7 @@ const initialRoads: RoadData[] = [
       [30.0511, 31.2000],
       [30.0469, 31.2100],
     ],
-    avgGreenTime: 15,
+    avgGreenTime: 190,
   },
   {
     id: 3,
@@ -60,7 +60,7 @@ const initialRoads: RoadData[] = [
       [30.0469, 31.2290],
       [30.0450, 31.2330],
     ],
-    avgGreenTime: 12,
+    avgGreenTime: 190,
   },
   {
     id: 4,
@@ -76,7 +76,7 @@ const initialRoads: RoadData[] = [
       [29.9800, 31.0200],
       [30.0000, 31.1000],
     ],
-    avgGreenTime: 5,
+    avgGreenTime: 190,
   },
   {
     id: 5,
@@ -92,7 +92,7 @@ const initialRoads: RoadData[] = [
       [30.0435, 31.2285],
       [30.0444, 31.2357],
     ],
-    avgGreenTime: 10,
+    avgGreenTime: 190,
   },
 ];
 
