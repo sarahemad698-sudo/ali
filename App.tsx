@@ -204,7 +204,7 @@ const dismissedRef = useRef({
                 //freq
                 //////////////////////
 // --- LOGIC FOR ALERTS ---
-const isEmergency = avgGreen > 20;
+const isEmergency = avgGreen <180;
 let gateStatus = roadData.gate?.isClosed ? 'closed' : 'open';
 
 // 1. Ambulance Logic
