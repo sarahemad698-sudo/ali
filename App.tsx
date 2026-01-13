@@ -3,7 +3,7 @@ import { Dashboard } from './components/Dashboard';
 import { RealTimeMap } from './components/RealTimeMap';
 import { Welcome } from './components/Welcome';
 import { Auth } from './components/Auth';
-import { LayoutDashboard, Map as MapIcon, Activity, Wifi, Siren, X, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, Map as MapIcon, Activity, Wifi, X, AlertTriangle } from 'lucide-react';
 import { RoadData } from './types';
 // @ts-ignore
 import { initializeApp } from 'firebase/app';
@@ -119,7 +119,7 @@ const sendSystemNotification = (title: string, body: string, tag: string) => {
         icon: 'https://cdn-icons-png.flaticon.com/512/1032/1032989.png',
         tag,
         renotify: true,
-        requireInteraction: tag === 'ambulance' || tag === 'closed',
+        requireInteraction: tag === 'closed',
       });
     } catch (e) {
       console.error("Notification Error", e);
@@ -128,7 +128,6 @@ const sendSystemNotification = (title: string, body: string, tag: string) => {
 };
 
 // ---- TUNABLES ----
-const EMERGENCY_THRESHOLD = 180;  // avgGreen < this => emergency
 const WARNING_THRESHOLD = 8;      // cars >= 8 => warning
 const CLOSED_THRESHOLD = 10;      // cars >= 10 => closed
 const POPUP_AUTO_CLOSE_MS = 30000;
@@ -142,7 +141,7 @@ export default function App() {
 
   const [popupData, setPopupData] = useState<{
     message: string;
-    type: 'ambulance' | 'warning' | 'closed';
+    type: 'warning' | 'closed';
     visible: boolean;
   }>({ message: '', type: 'warning', visible: false });
 
@@ -153,20 +152,18 @@ export default function App() {
   }, [popupData]);
 
   // Prevent spamming notifications
-  const prevAmbulanceRef = useRef(false);
   const prevWarningRef = useRef(false);
   const prevClosedRef = useRef(false);
 
   // Snooze (when user clicks X)
-  const snoozeUntilRef = useRef<{ ambulance: number; warning: number; closed: number }>({
-    ambulance: 0,
+  const snoozeUntilRef = useRef<{ warning: number; closed: number }>({
     warning: 0,
     closed: 0,
   });
 
-  const canShow = (type: 'ambulance' | 'warning' | 'closed') => Date.now() >= snoozeUntilRef.current[type];
+  const canShow = (type: 'warning' | 'closed') => Date.now() >= snoozeUntilRef.current[type];
 
-  const showPopup = (type: 'ambulance' | 'warning' | 'closed', message: string) => {
+  const showPopup = (type: 'warning' | 'closed', message: string) => {
     setPopupData(prev => {
       // If already showing same type, don’t re-render spam
       if (prev.visible && prev.type === type && prev.message === message) return prev;
@@ -232,25 +229,14 @@ export default function App() {
               "avgGreen number:",
               avgGreen,
               "cars:",
-              currentVehicles,
-              "isEmergency:",
-              avgGreen < EMERGENCY_THRESHOLD
+              currentVehicles
             );
 
-            const isEmergency = avgGreen < EMERGENCY_THRESHOLD;
             let gateStatus: 'open' | 'closed' = roadData.gate?.isClosed ? 'closed' : 'open';
 
             // ---- ALERT PRIORITY ----
-            // 1) Emergency
-            if (isEmergency && canShow('ambulance')) {
-              showPopup('ambulance', "⚠️ تنبيه عاجل: رصد سيارة إسعاف/طوارئ على طريق الواحات!");
-
-              if (!prevAmbulanceRef.current) {
-                sendSystemNotification("🚑 حالة طوارئ", "تم رصد سيارة إسعاف. تم فتح الإشارة.", "ambulance");
-              }
-            }
-            // 2) Closed (>= 10)
-            else if (currentVehicles >= CLOSED_THRESHOLD && canShow('closed')) {
+            // 1) Closed (>= 10)
+            if (currentVehicles >= CLOSED_THRESHOLD && canShow('closed')) {
               gateStatus = 'closed';
 
               showPopup('closed', "🚨 طريق مغلق: عدد العربيات وصل 10! سيتم إعادة الفتح بعد 15 دقيقة.");
@@ -259,7 +245,7 @@ export default function App() {
                 sendSystemNotification("🛑 طريق مغلق", "طريق الواحات مزدحم جداً (10+ سيارات).", "closed");
               }
             }
-            // 3) Warning (>= 8)
+            // 2) Warning (>= 8)
             else if (currentVehicles >= WARNING_THRESHOLD && canShow('warning')) {
               showPopup('warning', "⚠️ تحذير: كثافة عالية (8 سيارات). الطريق اقترب من الإغلاق.");
 
@@ -269,7 +255,6 @@ export default function App() {
             }
 
             // Update “previous state” refs (to reduce spamming notifications)
-            prevAmbulanceRef.current = isEmergency;
             prevClosedRef.current = currentVehicles >= CLOSED_THRESHOLD;
             prevWarningRef.current = currentVehicles >= WARNING_THRESHOLD && currentVehicles < CLOSED_THRESHOLD;
 
@@ -310,7 +295,6 @@ export default function App() {
   }
 
   const popupStyles = {
-    ambulance: { bg: 'bg-blue-600', border: 'border-blue-400', icon: Siren, title: 'حالة طوارئ' },
     warning: { bg: 'bg-green-600', border: 'border-green-400', icon: AlertTriangle, title: 'تنبيه مروري' },
     closed: { bg: 'bg-red-600', border: 'border-red-400', icon: X, title: 'طريق مغلق' },
   } as const;
@@ -341,9 +325,7 @@ export default function App() {
               <div className="bg-white p-3 rounded-full shadow-inner">
                 <currentStyle.icon
                   className={`text-3xl ${
-                    popupData.type === 'ambulance'
-                      ? 'text-blue-600 animate-pulse'
-                      : popupData.type === 'closed'
+                    popupData.type === 'closed'
                       ? 'text-red-600'
                       : 'text-green-600'
                   }`}
