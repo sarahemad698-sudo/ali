@@ -16,3 +16,8 @@ export interface RoadData {
 export interface AppState {
   view: 'dashboard' | 'map';
 }
+export interface RouteInfo {
+  distance: number;
+  time: number;
+  trafficWarnings: string[];
+}
