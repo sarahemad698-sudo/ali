@@ -76,7 +76,7 @@ export function Dashboard({ roads }: DashboardProps) {
         <div className="space-y-4">
           {roads.map((road) => {
             const occupancyPercent = (road.currentVehicles / road.capacity) * 100;
-            const isEmergency = road.avgGreenTime && road.avgGreenTime > 20;
+            const isEmergency = road.avgGreenTime && road.avgGreenTime < 20;
             const isHigh = occupancyPercent >= 80;
             const isMedium = occupancyPercent >= 60 && occupancyPercent < 80;
 
