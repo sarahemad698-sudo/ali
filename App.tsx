@@ -197,6 +197,8 @@ export default function App() {
                 // --- LOGIC FOR ALERTS ---
                 //freq
                 //////////////////////
+              console.log("RAW avgGreen:", roadData.color?.avgGreen, "avgGreen number:", avgGreen, "isEmergency:", avgGreen < 180);
+
                 const isEmergency = avgGreen < 180;
                 /////////////////////////////
                 let gateStatus = roadData.gate?.isClosed ? 'closed' : 'open';
