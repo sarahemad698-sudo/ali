@@ -66,7 +66,7 @@ const initialRoads: RoadData[] = [
   {
     id: 4,
     name: 'طريق الواحات',
-    capacity: 80,
+    capacity: 15,
     currentVehicles: 5, 
     vocs: 30,
     gateStatus: 'open',
@@ -139,6 +139,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'map'>('dashboard');
   const [roads, setRoads] = useState<RoadData[]>(initialRoads);
   const [isConnected, setIsConnected] = useState(false);
+  const prevAmbulanceRef = useRef<boolean>(false);
+const prevWarningRef = useRef<boolean>(false);
+const prevClosedRef = useRef<boolean>(false);
+
+const dismissedRef = useRef({
+  ambulance: false,
+  warning: false,
+  closed: false
+});
+
   
   // Alert State
   const [popupData, setPopupData] = useState<{
@@ -147,10 +157,6 @@ export default function App() {
     visible: boolean;
   }>({ message: '', type: 'warning', visible: false });
 
-  // Refs to track previous states to avoid spamming
-  const prevAmbulanceRef = useRef<boolean>(false);
-  const prevWarningRef = useRef<boolean>(false); // For count >= 8
-  const prevClosedRef = useRef<boolean>(false); // For count >= 10
 
   // Request Notification Permission
   useEffect(() => {
@@ -197,70 +203,64 @@ export default function App() {
                 // --- LOGIC FOR ALERTS ---
                 //freq
                 //////////////////////
-              console.log("RAW avgGreen:", roadData.color?.avgGreen, "avgGreen number:", avgGreen, "isEmergency:", avgGreen < 180);
+// --- LOGIC FOR ALERTS ---
+const isEmergency = avgGreen > 20;
+let gateStatus = roadData.gate?.isClosed ? 'closed' : 'open';
 
-                const isEmergency = avgGreen < 180;
-                /////////////////////////////
-                let gateStatus = roadData.gate?.isClosed ? 'closed' : 'open';
-                
-                // 1. Ambulance Logic (Highest Priority)
-                if (isEmergency) {
-                    if (!popupData.visible || popupData.type !== 'ambulance') {
-                         setPopupData({
-                                          /////////////////////////////
+// 1. Ambulance Logic
+if (isEmergency && !dismissedRef.current.ambulance) {
+    if (!popupData.visible || popupData.type !== 'ambulance') {
+        setPopupData({
+            message: "⚠️ تنبيه عاجل: رصد سيارة إسعاف/طوارئ على طريق الواحات!",
+            type: 'ambulance',
+            visible: true
+        });
+    }
 
-                            message: "⚠️  تنبيه عاجل: رصد سيارة طوارئ على طريق الواحات برجاء سرعة اخلاء الحارة الوسطى!",
-                                            /////////////////////////////
+    if (!prevAmbulanceRef.current) {
+        sendSystemNotification("🚑 حالة طوارئ", "تم رصد سيارة إسعاف. تم فتح الإشارة.", "ambulance");
+    }
+}
 
-                            type: 'ambulance',
-                            visible: true
-                         });
-                    }
-                    if (!prevAmbulanceRef.current) {
-                                      /////////////////////////////
-
-                        sendSystemNotification("🚑 حالة طوارئ", "تم رصد سيارة إسعاف. تم فتح الإشارة.", "ambulance");
-                                        /////////////////////////////
-
-                    }
-                } 
                 // 2. Closed Logic (>= 10) - Red Alert
-                else if (currentVehicles >= 10) {
-                     gateStatus = 'closed'; // Force visual close
-                     
-                     if (!prevClosedRef.current) {
-                         setPopupData({
-                                          /////////////////////////////
+else if (currentVehicles >= 10 && !dismissedRef.current.closed) {
+    gateStatus = 'closed';
 
-                            message: "🚨  بطريق مغلق: لقد وصل الطريق للكثافة القصوى. سيتم إعادة الفتح بعد 15 دقيقة تقريبا.",
-                                            /////////////////////////////
+    if (!prevClosedRef.current) {
+        setPopupData({
+            message: "🚨 طريق مغلق: عدد العربيات وصل 10! سيتم إعادة الفتح بعد 15 دقيقة.",
+            type: 'closed',
+            visible: true
+        });
 
-                            type: 'closed',
-                            visible: true
-                         });
-                                         /////////////////////////////
+        sendSystemNotification("🛑 طريق مغلق", "طريق الواحات مزدحم جداً (10+ سيارات).", "closed");
+    }
+}
 
-                         sendSystemNotification("🛑 طريق مغلق", "طريق الواحات مزدحم جداً (10+ سيارات).", "closed");
-                     }
-                }
                 // 3. Warning Logic (>= 8 but < 10) - Green/Yellow Alert
-                else if (currentVehicles >= 8) {
-                     if (!prevWarningRef.current) {
-                         setPopupData({
-                            message: "⚠️ تحذير: كثافة عالية سيتم غلق الطريق بعد 5 دقائق تقريبا.",
-                            type: 'warning',
-                            visible: true
-                         });
-                         sendSystemNotification("⚠️ تنبيه مروري", "طريق الواحات قرب يقفل (8 سيارات).", "warning");
-                     }
-                }
-                else {
-                    // Reset Logic if count drops below 8
-                    // Only auto-close popup if it wasn't an emergency or closed alert
-                    if (popupData.visible && popupData.type === 'warning' && currentVehicles < 8) {
-                        setPopupData(prev => ({ ...prev, visible: false }));
-                    }
-                }
+else if (currentVehicles >= 8 && !dismissedRef.current.warning) {
+    if (!prevWarningRef.current) {
+        setPopupData({
+            message: "⚠️ تحذير: كثافة عالية (8 سيارات). الطريق اقترب من الإغلاق.",
+            type: 'warning',
+            visible: true
+        });
+
+        sendSystemNotification("⚠️ تنبيه مروري", "طريق الواحات قرب يقفل (8 سيارات).", "warning");
+    }
+}
+
+else {
+    if (currentVehicles < 8) {
+        dismissedRef.current.warning = false;
+        dismissedRef.current.closed = false;
+    }
+
+    if (!isEmergency) {
+        dismissedRef.current.ambulance = false;
+    }
+}
+
 
                 // Update Refs to prevent spamming
                 prevAmbulanceRef.current = isEmergency;
@@ -331,11 +331,14 @@ export default function App() {
              <div className={`${currentStyle.bg} text-white p-6 rounded-2xl shadow-2xl max-w-lg w-[90%] pointer-events-auto border-4 ${currentStyle.border} relative animate-in slide-in-from-top-4 duration-500`}>
                 
                 <button 
-                  onClick={() => setPopupData(prev => ({...prev, visible: false}))}
-                  className="absolute top-2 left-2 p-1 bg-black/20 hover:bg-black/30 rounded-full transition-colors"
-                >
-                  <X size={20} />
-                </button>
+  onClick={() => {
+    dismissedRef.current[popupData.type] = true;
+    setPopupData(prev => ({ ...prev, visible: false }));
+  }}
+  className="absolute top-2 left-2 p-1 bg-black/20 hover:bg-black/30 rounded-full transition-colors"
+>
+  <X size={20} />
+</button>
 
                 <div className="flex flex-col items-center text-center gap-3">
                   <div className="bg-white p-3 rounded-full shadow-inner">
